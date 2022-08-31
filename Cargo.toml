@@ -1,0 +1,13 @@
+[package]
+name = "hc-gtk"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gtk = { version = "0.4.8", package = "gtk4", features = ["v4_6"]}
+rustunicodetests = { path = "../rustunicodetests" }
+#rustunicodetests = { git = "https://github.com/jeremymarch/rustunicodetests", version = "0.1.0" }
+form_selector = { path = "../form_selector" }
+pango = "0.15.10"
