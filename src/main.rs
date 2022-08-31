@@ -4,13 +4,25 @@ use gtk::Button;
 use gtk::StyleContext;
 use gtk::CssProvider;
 use gtk::gdk::Display;
+use gtk::Inhibit;
 
 const APP_ID: &str = "org.gtk_rs.HelloWorld2";
 
 fn build_ui(app: &Application) {
     let text_view: gtk::TextView = gtk::TextView::new();
     text_view.set_wrap_mode(gtk::WrapMode::Word);
-    text_view.set_cursor_visible(false);
+    text_view.set_cursor_visible(true);
+    let margin = 10;
+    text_view.set_left_margin(margin);
+    text_view.set_top_margin(margin);
+    text_view.set_right_margin(margin);
+    text_view.set_bottom_margin(margin);
+
+    // text_view.connect("key-press", false, |values| {
+    //     println!("key pressed");
+    //     //Inhibit(false)
+    //     None
+    // });
 
     let scrolled_window = gtk::ScrolledWindow::builder()
             .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
@@ -49,6 +61,29 @@ fn build_ui(app: &Application) {
         .default_height(400)
         .child(&vbox)
         .build();
+
+    //     window
+    // .connect("key_press_event", false, |values| {
+    //     // "values" is a 2-long slice of glib::value::Value, which wrap G-types
+    //     // You can unwrap them if you know what type they are going to be ahead of time
+    //     // values[0] is the window and values[1] is the event
+    //     let raw_event = &values[1].get::<gtk::gdk::Event>().unwrap().unwrap();
+    //     // You have to cast to the correct event type to access some of the fields
+    //     match raw_event.downcast_ref::<gtk::gdk::EventKey>() {
+    //         Some(event) => {
+    //             println!("key value: {:?}", std::char::from_u32(event.get_keyval()));
+    //             println!("modifiers: {:?}", event.get_state());
+    //         },
+    //         None => {},
+    //     }
+
+    //     // You need to return Some() of a glib Value wrapping a bool
+    //     let result = gtk::glib::value::Value::from_type(gtk::glib::types::Type::Bool);
+    //     // I can't figure out how to actually set the value of result
+    //     // Luckally returning false is good enough for now.
+    //     Some(result)
+    // })
+    // .unwrap();
 
     // Present window
     window.present();
