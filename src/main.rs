@@ -12,6 +12,7 @@ fn build_ui(app: &Application) {
     let text_view: gtk::TextView = gtk::TextView::new();
     text_view.set_wrap_mode(gtk::WrapMode::Word);
     text_view.set_cursor_visible(true);
+    text_view.set_justification(gtk::Justification::Center);
     let margin = 10;
     text_view.set_left_margin(margin);
     text_view.set_top_margin(margin);
@@ -23,17 +24,36 @@ fn build_ui(app: &Application) {
     //     //Inhibit(false)
     //     None
     // });
-
     let scrolled_window = gtk::ScrolledWindow::builder()
-            .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
-            .min_content_width(360)
-            .vexpand(true)
-            .child(&text_view)
-            .build();
+        .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
+        .min_content_width(360)
+        .vexpand(true)
+        .child(&text_view)
+        .build();
+
+    let text_view2: gtk::TextView = gtk::TextView::new();
+    text_view2.set_wrap_mode(gtk::WrapMode::Word);
+    text_view2.set_cursor_visible(false);
+    text_view2.set_justification(gtk::Justification::Center);
+    text_view2.set_left_margin(margin);
+    text_view2.set_top_margin(margin);
+    text_view2.set_right_margin(margin);
+    text_view2.set_bottom_margin(margin);
+    text_view2.set_editable(false);
+        
+    let scrolled_window2 = gtk::ScrolledWindow::builder()
+        .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
+        .min_content_width(360)
+        .vexpand(true)
+        .child(&text_view2)
+        .build();
+
+    let label = gtk::Label::new(Some(""));
+    label.set_markup("First <b>Singular</b> Present <b>Active</b> Indicative");
 
     // Create a button with label and margins
     let button = Button::builder()
-        .label("Press me!")
+        .label("Enter")
         .margin_top(12)
         .margin_bottom(12)
         .margin_start(12)
@@ -43,20 +63,23 @@ fn build_ui(app: &Application) {
     // Connect to "clicked" signal of `button`
     button.connect_clicked(move |button| {
         // Set the label to "Hello World!" after the button has been clicked on
-        button.set_label("Hello World!");
+        //button.set_label("Hello World!");
     });
 
     let vbox: gtk::Box = gtk::Box::new(gtk::Orientation::Vertical, 4);
         vbox.set_homogeneous(false);
         //vbox.pack_start(&text_view, true, true, 0);
         //vbox.pack_start(&button, true, true, 0);
+
+        vbox.append(&scrolled_window2);
+        vbox.append(&label);
         vbox.append(&scrolled_window);
         vbox.append(&button);
 
     // Create a window
     let window = ApplicationWindow::builder()
         .application(app)
-        .title("My GTK App")
+        .title("Hoplite Challenge")
         .default_width(550)
         .default_height(400)
         .child(&vbox)
