@@ -8,8 +8,9 @@ use adw::{ApplicationWindow, HeaderBar};
 use gtk::EventControllerKey;
 use gtk::Inhibit;
 use gtk::gdk::Key;
+use rustunicodetests::*;
 
-const APP_ID: &str = "org.gtk_rs.HelloWorld2";
+const APP_ID: &str = "com.philolog.hc-gtk";
 
 fn build_ui(app: &Application) {
     let text_view: gtk::TextView = gtk::TextView::new();
@@ -97,14 +98,76 @@ fn build_ui(app: &Application) {
         .build();
 
         //https://github.com/avranju/spacer-win/blob/65779df6e5a3884cc499cc2c48cd1348a7b4d63e/src/main.rs
+        //https://stackoverflow.com/questions/72796392/how-to-bind-a-key-press-to-a-speccific-action-in-gtk4
         let evk = EventControllerKey::new();
-        evk.connect_key_pressed(move |evck, key, code, state| {
-            if key == Key::Escape {
-                println!("esc {} {:?}", code, state);
+        let tv = text_view.clone();
+        evk.connect_key_pressed(move |_evck, key, _code, _state| {
+        
+            let a:Option<u32> = match key {
+                Key::_1 => Some(HGK_ROUGH),
+                Key::_2 => Some(HGK_SMOOTH),
+                Key::_3 => Some(HGK_ACUTE),
+                Key::_4 => Some(HGK_GRAVE),
+                Key::_5 => Some(HGK_CIRCUMFLEX),
+                Key::_6 => Some(HGK_MACRON),
+                Key::_7 => None,
+                Key::_8 => Some(HGK_IOTA_SUBSCRIPT),
+                Key::_9 => None,
+                Key::_0 => None,
+                _ => None
+            };
+
+            if a.is_some() {
+                let chars_to_get = 8;
+                let cursor_pos = tv.buffer().cursor_position();
+                let mut iter_end = tv.buffer().iter_at_offset(cursor_pos);
+                let start_pos = if cursor_pos >= chars_to_get { cursor_pos - chars_to_get } else { 0 };
+                let mut iter_start = tv.buffer().iter_at_offset(start_pos);
+
+                let s = tv.buffer().text(&iter_start, &iter_end, false);
+                let new = hgk_toggle_diacritic_str_end(&s, a.unwrap(), false, HgkUnicodeMode::PrecomposedPUA);
+
+                tv.buffer().delete(&mut iter_start, &mut iter_end);
+                tv.buffer().insert(&mut iter_start, &new);
+                //println!("text {}", s);
+
+                return Inhibit(true);
             }
-            else {
-                println!("pressed");
+
+            let v = match key {
+                Key::a | Key::A => "α",
+                Key::b | Key::B => "β",
+                Key::g | Key::G => "γ",
+                Key::d | Key::D => "δ",
+                Key::e | Key::E => "ε",
+                Key::z | Key::Z => "ζ",
+                Key::h | Key::H => "η",
+                Key::u | Key::U => "θ",
+                Key::i | Key::I => "ι",
+                Key::k | Key::K => "κ",
+                Key::l | Key::L => "λ",
+                Key::m | Key::M => "μ",
+                Key::n | Key::N => "ν",
+                Key::o | Key::O => "ο",
+                Key::j | Key::J => "ξ",
+                Key::p | Key::P => "π",
+                Key::r | Key::R => "ρ",
+                Key::s | Key::S => "σ",
+                Key::w | Key::W => "ς",
+                Key::t | Key::T => "τ",
+                Key::y | Key::Y => "υ",
+                Key::f | Key::F => "φ",
+                Key::x | Key::X => "χ",
+                Key::c | Key::C => "ψ",
+                Key::v | Key::V => "ω",
+                _ => ""
+            };
+
+            if v.len() > 0 {
+                tv.emit_insert_at_cursor(v);
+                return Inhibit(true);
             }
+
             Inhibit(false)
         });
         text_view.add_controller(&evk);
