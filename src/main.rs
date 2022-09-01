@@ -1,10 +1,11 @@
 use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow};
+use gtk::{Application};
 use gtk::Button;
 use gtk::StyleContext;
 use gtk::CssProvider;
 use gtk::gdk::Display;
-use gtk::Inhibit;
+use adw::{ApplicationWindow, HeaderBar};
+//use gtk::Inhibit;
 
 const APP_ID: &str = "org.gtk_rs.HelloWorld2";
 
@@ -40,6 +41,8 @@ fn build_ui(app: &Application) {
     text_view2.set_right_margin(margin);
     text_view2.set_bottom_margin(margin);
     text_view2.set_editable(false);
+
+    text_view2.buffer().set_text("\nφέρω");
         
     let scrolled_window2 = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
@@ -61,7 +64,7 @@ fn build_ui(app: &Application) {
         .build();
 
     // Connect to "clicked" signal of `button`
-    button.connect_clicked(move |button| {
+    button.connect_clicked(move |_button| {
         // Set the label to "Hello World!" after the button has been clicked on
         //button.set_label("Hello World!");
     });
@@ -70,7 +73,11 @@ fn build_ui(app: &Application) {
         vbox.set_homogeneous(false);
         //vbox.pack_start(&text_view, true, true, 0);
         //vbox.pack_start(&button, true, true, 0);
-
+        vbox.append(
+            &HeaderBar::builder()
+                .title_widget(&adw::WindowTitle::new("Hoplite Challenge", ""))
+                .build(),
+        );
         vbox.append(&scrolled_window2);
         vbox.append(&label);
         vbox.append(&scrolled_window);
@@ -82,7 +89,7 @@ fn build_ui(app: &Application) {
         .title("Hoplite Challenge")
         .default_width(550)
         .default_height(400)
-        .child(&vbox)
+        .content(&vbox)
         .build();
 
     //     window
@@ -130,7 +137,10 @@ fn main() {
     let app = Application::builder().application_id(APP_ID).build();
 
     // Connect to "activate" signal of `app`
-    app.connect_startup(|_| load_css());
+    app.connect_startup(|_| {
+        adw::init();
+        load_css();
+    });
     app.connect_activate(build_ui);
 
     // Run the application

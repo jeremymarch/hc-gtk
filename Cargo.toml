@@ -10,4 +10,4 @@ gtk = { version = "0.4.8", package = "gtk4", features = ["v4_6"]}
 rustunicodetests = { path = "../rustunicodetests" }
 #rustunicodetests = { git = "https://github.com/jeremymarch/rustunicodetests", version = "0.1.0" }
 form_selector = { path = "../form_selector" }
-pango = "0.15.10"
+adw = { version = "0.1.1", package = "libadwaita" }
