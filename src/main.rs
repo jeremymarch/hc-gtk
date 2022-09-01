@@ -5,7 +5,9 @@ use gtk::StyleContext;
 use gtk::CssProvider;
 use gtk::gdk::Display;
 use adw::{ApplicationWindow, HeaderBar};
-//use gtk::Inhibit;
+use gtk::EventControllerKey;
+use gtk::Inhibit;
+use gtk::gdk::Key;
 
 const APP_ID: &str = "org.gtk_rs.HelloWorld2";
 
@@ -20,11 +22,13 @@ fn build_ui(app: &Application) {
     text_view.set_right_margin(margin);
     text_view.set_bottom_margin(margin);
 
-    // text_view.connect("key-press", false, |values| {
+    // text_view.connect_closure("key-press", false, |values| {
     //     println!("key pressed");
     //     //Inhibit(false)
     //     None
     // });
+
+
     let scrolled_window = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
         .min_content_width(360)
@@ -91,6 +95,19 @@ fn build_ui(app: &Application) {
         .default_height(400)
         .content(&vbox)
         .build();
+
+        //https://github.com/avranju/spacer-win/blob/65779df6e5a3884cc499cc2c48cd1348a7b4d63e/src/main.rs
+        let evk = EventControllerKey::new();
+        evk.connect_key_pressed(move |evck, key, code, state| {
+            if key == Key::Escape {
+                println!("esc {} {:?}", code, state);
+            }
+            else {
+                println!("pressed");
+            }
+            Inhibit(false)
+        });
+        text_view.add_controller(&evk);
 
     //     window
     // .connect("key_press_event", false, |values| {
