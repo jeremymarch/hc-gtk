@@ -409,6 +409,7 @@ version = "0.1.0"
 dependencies = [
  "form_selector",
  "gtk4",
+ "hoplite_verbs_rs",
  "libadwaita",
  "rustunicodetests",
 ]
