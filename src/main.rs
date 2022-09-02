@@ -13,6 +13,8 @@ use rustunicodetests::*;
 use form_selector::*;
 use hoplite_verbs_rs::*;
 
+use std::sync::{Arc, Mutex};
+
 const APP_ID: &str = "com.philolog.hc-gtk";
 
 fn build_ui(app: &Application) {
@@ -74,14 +76,15 @@ fn build_ui(app: &Application) {
     vbox.append(&scrolled_window);
     vbox.append(&button);
 
-    let mut chooser = init_random_form_chooser("../hoplite_verbs_rs/testdata/pp.txt", 20);
-    chooser.set_reps_per_verb(6);
+    let chooser = Arc::new(Mutex::new(init_random_form_chooser("../hoplite_verbs_rs/testdata/pp.txt", 20)));
+    //chooser.set_reps_per_verb(6);
 
+    let tv2 = text_view.clone();
     button.connect_clicked(move |_button| {
-        // if let Ok(vf) = chooser.next_form(None) {
-        //     let form = vf.0.get_form(false).unwrap().last().unwrap().form.to_string();
-        //     text_view.buffer().set_text(&form); 
-        // }
+        if let Ok(vf) = chooser.lock().unwrap().next_form(None) {
+            let form = vf.0.get_form(false).unwrap().last().unwrap().form.to_string();
+            tv2.buffer().set_text(&form);
+        }
     });
 
     let window = ApplicationWindow::builder()
