@@ -77,13 +77,17 @@ fn build_ui(app: &Application) {
     vbox.append(&button);
 
     let chooser = Arc::new(Mutex::new(init_random_form_chooser("../hoplite_verbs_rs/testdata/pp.txt", 20)));
-    //chooser.set_reps_per_verb(6);
-
-    let tv2 = text_view.clone();
+    if let Ok(mut ch) = chooser.lock() {
+        ch.set_reps_per_verb(6);
+    }
+    let tv2 = text_view2.clone();
     button.connect_clicked(move |_button| {
-        if let Ok(vf) = chooser.lock().unwrap().next_form(None) {
-            let form = vf.0.get_form(false).unwrap().last().unwrap().form.to_string();
-            tv2.buffer().set_text(&form);
+        if let Ok(mut ch) = chooser.lock() {
+            if let Ok(vf) = ch.next_form(None) {
+                let form = vf.0.get_form(false).unwrap().last().unwrap().form.to_string();
+                label.set_text(format!("{:?} {:?} {:?} {:?} {:?}", vf.0.person, vf.0.number, vf.0.tense, vf.0.mood, vf.0.voice).as_str());
+                tv2.buffer().set_text(&form);
+            }
         }
     });
 
@@ -101,7 +105,7 @@ fn build_ui(app: &Application) {
     let tv = text_view.clone();
     evk.connect_key_pressed(move |_evck, key, _code, _state| {
         
-        let a:Option<u32> = match key {
+        let diacritic:Option<u32> = match key {
             Key::_1 => Some(HGK_ROUGH),
             Key::_2 => Some(HGK_SMOOTH),
             Key::_3 => Some(HGK_ACUTE),
@@ -115,7 +119,7 @@ fn build_ui(app: &Application) {
             _ => None
         };
 
-        if a.is_some() {
+        if diacritic.is_some() {
             let chars_to_get = 8;
             let cursor_pos = tv.buffer().cursor_position();
             let mut iter_end = tv.buffer().iter_at_offset(cursor_pos);
@@ -123,16 +127,15 @@ fn build_ui(app: &Application) {
             let mut iter_start = tv.buffer().iter_at_offset(start_pos);
 
             let s = tv.buffer().text(&iter_start, &iter_end, false);
-            let new = hgk_toggle_diacritic_str_end(&s, a.unwrap(), false, HgkUnicodeMode::PrecomposedPUA);
+            let new_s = hgk_toggle_diacritic_str_end(&s, diacritic.unwrap(), false, HgkUnicodeMode::PrecomposedPUA);
 
             tv.buffer().delete(&mut iter_start, &mut iter_end);
-            tv.buffer().insert(&mut iter_start, &new);
-            //println!("text {}", s);
+            tv.buffer().insert(&mut iter_start, &new_s);
 
             return Inhibit(true);
         }
 
-        let v = match key {
+        let translated_key = match key {
             Key::a | Key::A => "α",
             Key::b | Key::B => "β",
             Key::g | Key::G => "γ",
@@ -161,8 +164,8 @@ fn build_ui(app: &Application) {
             _ => ""
         };
 
-        if v.len() > 0 {
-            tv.emit_insert_at_cursor(v);
+        if translated_key.len() > 0 {
+            tv.emit_insert_at_cursor(translated_key);
             return Inhibit(true);
         }
 
