@@ -57,6 +57,8 @@ fn build_ui(app: &Application) {
     let label = gtk::Label::new(Some(""));
     label.set_markup("First <b>Singular</b> Present <b>Active</b> Indicative");
 
+    let correct_label = gtk::Label::new(Some(""));
+
     let button = Button::builder()
         .label("Enter")
         .margin_top(12)
@@ -74,6 +76,7 @@ fn build_ui(app: &Application) {
     vbox.append(&scrolled_window2);
     vbox.append(&label);
     vbox.append(&scrolled_window);
+    vbox.append(&correct_label);
     vbox.append(&button);
 
     let chooser = Arc::new(Mutex::new(init_random_form_chooser("../hoplite_verbs_rs/testdata/pp.txt", 20)));
@@ -81,12 +84,41 @@ fn build_ui(app: &Application) {
         ch.set_reps_per_verb(6);
     }
     let tv2 = text_view2.clone();
-    button.connect_clicked(move |_button| {
+    let tv1 = text_view.clone();
+    button.connect_clicked(move |button| {
         if let Ok(mut ch) = chooser.lock() {
-            if let Ok(vf) = ch.next_form(None) {
+            if ch.history.len() == 0 {
+                _ = ch.next_form(None);
+            }
+
+            let answer = tv1.buffer().text(&tv1.buffer().start_iter(), &tv1.buffer().end_iter(), false);
+            if let Ok(vf) = ch.next_form(Some(&answer)) {
+
+                let prev = &ch.history[ch.history.len() - 2];
+                let prev_f = prev.get_form(false).unwrap().last().unwrap().form.to_string();
+                println!("prev {}", prev_f);
+
                 let form = vf.0.get_form(false).unwrap().last().unwrap().form.to_string();
+                let is_correct = vf.1;
+                if let Some(ic) = is_correct {
+                    if ic {
+                        println!("correct");
+                        correct_label.set_markup("<span foreground=\"green\">correct</span>");
+                    }
+                    else {
+                        println!("incorrect");
+                        correct_label.set_markup(format!("<span foreground=\"red\">incorrect: {}</span>", form).as_str());
+                    }
+                }
                 label.set_text(format!("{:?} {:?} {:?} {:?} {:?}", vf.0.person, vf.0.number, vf.0.tense, vf.0.mood, vf.0.voice).as_str());
-                tv2.buffer().set_text(&form);
+                tv2.buffer().set_text(&prev_f);
+                //tv1.buffer().set_text("");
+                if button.label().unwrap() == "Continue" {
+                    button.set_label("Submit");
+                }
+                else {
+                    button.set_label("Continue");
+                }
             }
         }
     });
@@ -105,7 +137,7 @@ fn build_ui(app: &Application) {
     let tv = text_view.clone();
     evk.connect_key_pressed(move |_evck, key, _code, _state| {
         
-        let diacritic:Option<u32> = match key {
+        let diacritic_option:Option<u32> = match key {
             Key::_1 => Some(HGK_ROUGH),
             Key::_2 => Some(HGK_SMOOTH),
             Key::_3 => Some(HGK_ACUTE),
@@ -119,18 +151,19 @@ fn build_ui(app: &Application) {
             _ => None
         };
 
-        if diacritic.is_some() {
+        if let Some(diacritic) = diacritic_option {
             let chars_to_get = 8;
-            let cursor_pos = tv.buffer().cursor_position();
-            let mut iter_end = tv.buffer().iter_at_offset(cursor_pos);
+            let buf = tv.buffer();
+            let cursor_pos = buf.cursor_position();
+            let mut iter_end = buf.iter_at_offset(cursor_pos);
             let start_pos = if cursor_pos >= chars_to_get { cursor_pos - chars_to_get } else { 0 };
-            let mut iter_start = tv.buffer().iter_at_offset(start_pos);
+            let mut iter_start = buf.iter_at_offset(start_pos);
 
-            let s = tv.buffer().text(&iter_start, &iter_end, false);
-            let new_s = hgk_toggle_diacritic_str_end(&s, diacritic.unwrap(), false, HgkUnicodeMode::PrecomposedPUA);
+            let s = buf.text(&iter_start, &iter_end, false);
+            let new_s = hgk_toggle_diacritic_str_end(&s, diacritic, false, HgkUnicodeMode::PrecomposedPUA);
 
-            tv.buffer().delete(&mut iter_start, &mut iter_end);
-            tv.buffer().insert(&mut iter_start, &new_s);
+            buf.delete(&mut iter_start, &mut iter_end);
+            buf.insert(&mut iter_start, &new_s);
 
             return Inhibit(true);
         }
