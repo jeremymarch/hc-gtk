@@ -45,7 +45,7 @@ fn build_ui(app: &Application) {
     text_view2.set_bottom_margin(margin);
     text_view2.set_editable(false);
 
-    text_view2.buffer().set_text("\nφέρω");
+    //text_view2.buffer().set_text("\nφέρω");
         
     let scrolled_window2 = gtk::ScrolledWindow::builder()
         .hscrollbar_policy(gtk::PolicyType::Never) // Disable horizontal scrolling
@@ -55,12 +55,12 @@ fn build_ui(app: &Application) {
         .build();
 
     let label = gtk::Label::new(Some(""));
-    label.set_markup("First <b>Singular</b> Present <b>Active</b> Indicative");
+    //label.set_markup("First <b>Singular</b> Present <b>Active</b> Indicative");
 
     let correct_label = gtk::Label::new(Some(""));
 
     let button = Button::builder()
-        .label("Enter")
+        .label("Start")
         .margin_top(12)
         .margin_bottom(12)
         .margin_start(12)
@@ -88,37 +88,51 @@ fn build_ui(app: &Application) {
     button.connect_clicked(move |button| {
         if let Ok(mut ch) = chooser.lock() {
             if ch.history.len() == 0 {
-                _ = ch.next_form(None);
+                _ = ch.next_form(None); //start form
+                _ = ch.next_form(None); //change to...
             }
 
-            let answer = tv1.buffer().text(&tv1.buffer().start_iter(), &tv1.buffer().end_iter(), false);
-            if let Ok(vf) = ch.next_form(Some(&answer)) {
-
-                let prev = &ch.history[ch.history.len() - 2];
-                let prev_f = prev.get_form(false).unwrap().last().unwrap().form.to_string();
-                println!("prev {}", prev_f);
-
-                let form = vf.0.get_form(false).unwrap().last().unwrap().form.to_string();
-                let is_correct = vf.1;
-                if let Some(ic) = is_correct {
-                    if ic {
-                        println!("correct");
-                        correct_label.set_markup("<span foreground=\"green\">correct</span>");
+            if button.label().unwrap() == "Submit" {
+                let answer = tv1.buffer().text(&tv1.buffer().start_iter(), &tv1.buffer().end_iter(), false);
+                if let Ok(vf) = ch.next_form(Some(&answer)) {
+                    let is_correct = vf.1;
+                    if let Some(ic) = is_correct {
+                        if ic {
+                            println!("correct");
+                            correct_label.set_markup("<span foreground=\"green\">correct</span>");
+                        }
+                        else {
+                            println!("incorrect");
+                            let prev1 = &ch.history[ch.history.len() - 2];
+                            let form = prev1.get_form(false).unwrap().last().unwrap().form.to_string();
+                            correct_label.set_markup(format!("<span foreground=\"red\">incorrect: {}</span>", form).as_str());
+                        }
                     }
-                    else {
-                        println!("incorrect");
-                        correct_label.set_markup(format!("<span foreground=\"red\">incorrect: {}</span>", form).as_str());
-                    }
-                }
-                label.set_text(format!("{:?} {:?} {:?} {:?} {:?}", vf.0.person, vf.0.number, vf.0.tense, vf.0.mood, vf.0.voice).as_str());
-                tv2.buffer().set_text(&prev_f);
-                //tv1.buffer().set_text("");
-                if button.label().unwrap() == "Continue" {
-                    button.set_label("Submit");
-                }
-                else {
                     button.set_label("Continue");
                 }
+            }
+            else {
+                button.set_label("Submit");
+
+                println!("counter: {}, reps: {}", ch.verb_counter, ch.reps_per_verb);
+                if ch.verb_counter == 1 {
+                    _ = ch.next_form(None); //change to...
+                    //ch.verb_counter = 6;
+                    println!("change");
+                }
+
+                let prev1 = &ch.history[ch.history.len() - 2];
+                let form = prev1.get_form(false).unwrap().last().unwrap().form.to_string();
+
+                let prev = &ch.history[ch.history.len() - 1];
+                //let prev_f = prev.get_form(false).unwrap().last().unwrap().form.to_string();
+                //println!("prev {}", prev_f);
+
+                label.set_text(format!("{:?} {:?} {:?} {:?} {:?}", prev.person, prev.number, prev.tense, prev.mood, prev.voice).as_str());
+
+                correct_label.set_markup("");
+                tv2.buffer().set_text(&form);
+                tv1.buffer().set_text("");
             }
         }
     });
