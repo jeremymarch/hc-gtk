@@ -81,19 +81,20 @@ fn build_ui(app: &Application) {
 
     let chooser = Arc::new(Mutex::new(init_random_form_chooser("../hoplite_verbs_rs/testdata/pp.txt", 20)));
     if let Ok(mut ch) = chooser.lock() {
-        ch.set_reps_per_verb(6);
+        ch.set_reps_per_verb(4);
     }
     let tv2 = text_view2.clone();
     let tv1 = text_view.clone();
     button.connect_clicked(move |button| {
         if let Ok(mut ch) = chooser.lock() {
             if ch.history.len() == 0 {
-                _ = ch.next_form(None); //start form
-                _ = ch.next_form(None); //change to...
+                _ = ch.next_form(None);
             }
 
             if button.label().unwrap() == "Submit" {
                 let answer = tv1.buffer().text(&tv1.buffer().start_iter(), &tv1.buffer().end_iter(), false);
+                let prev1 = &ch.history[ch.history.len() - 1]; //call here before calling next_form()
+                let form = prev1.get_form(false).unwrap().last().unwrap().form.to_string();
                 if let Ok(vf) = ch.next_form(Some(&answer)) {
                     let is_correct = vf.1;
                     if let Some(ic) = is_correct {
@@ -103,8 +104,7 @@ fn build_ui(app: &Application) {
                         }
                         else {
                             println!("incorrect");
-                            let prev1 = &ch.history[ch.history.len() - 2];
-                            let form = prev1.get_form(false).unwrap().last().unwrap().form.to_string();
+                            
                             correct_label.set_markup(format!("<span foreground=\"red\">incorrect: {}</span>", form).as_str());
                         }
                     }
@@ -115,11 +115,11 @@ fn build_ui(app: &Application) {
                 button.set_label("Submit");
 
                 println!("counter: {}, reps: {}", ch.verb_counter, ch.reps_per_verb);
-                if ch.verb_counter == 1 {
-                    _ = ch.next_form(None); //change to...
-                    //ch.verb_counter = 6;
-                    println!("change");
-                }
+                // if ch.verb_counter == 1 {
+                //     _ = ch.next_form(None); //change to...
+                //     //ch.verb_counter = 6;
+                //     println!("change");
+                // }
 
                 let prev1 = &ch.history[ch.history.len() - 2];
                 let form = prev1.get_form(false).unwrap().last().unwrap().form.to_string();
