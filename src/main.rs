@@ -106,7 +106,7 @@ fn build_ui(app: &Application) {
                         }
                         else {
                             println!("incorrect");
-                            correct_label.set_markup(format!("<span foreground=\"red\">incorrect: {}</span>", answer_correct).as_str());
+                            correct_label.set_markup(format!("<span foreground=\"red\">incorrect: {}</span>", answer_correct.replace(" /", ",")).as_str());
 
                             //new verb!
                             // ch.verb_counter = 0;
@@ -126,10 +126,10 @@ fn build_ui(app: &Application) {
 
                 let changed_vf = &ch.history[ch.history.len() - 1];
 
-                change_label.set_text(format!("{:?} {:?} {:?} {:?} {:?}", changed_vf.person, changed_vf.number, changed_vf.tense, changed_vf.mood, changed_vf.voice).as_str());
+                change_label.set_markup(changed_vf.get_description(starting_vf, "<span foreground=\"red\"><b>", "</b></span>").as_str());
 
                 correct_label.set_markup("");
-                starting_form_tv.buffer().set_text(&starting_form);
+                starting_form_tv.buffer().set_text(&starting_form.replace(" /", ","));
                 changed_form_tv.buffer().set_text("");
                 changed_form_tv.set_editable(true);
                 changed_form_tv.set_cursor_visible(true);
