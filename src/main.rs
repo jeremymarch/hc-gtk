@@ -81,6 +81,7 @@ fn build_ui(app: &Application) {
     let chooser = Arc::new(Mutex::new(init_random_form_chooser("../hoplite_verbs_rs/testdata/pp.txt", 20)));
     if let Ok(mut ch) = chooser.lock() {
         ch.set_reps_per_verb(4);
+        ch.change_verb_incorrect = true;
     }
     let starting_form_tv = starting_form_tv_orig.clone();
     let changed_form_tv = changed_form_tv_orig.clone();
