@@ -66,12 +66,30 @@ fn build_ui(app: &Application) {
         .margin_end(12)
         .build();
 
+    let mfbutton = Button::builder()
+        .label("MF")
+        .margin_top(12)
+        .margin_bottom(12)
+        .margin_start(12)
+        .margin_end(12)
+        .build();
+        
+    let timer_label = gtk::Label::new(Some("Timer"));
+    //timer_label.set_justify(gtk::Justification::Right);
+    //timer_label.set_xalign(1.0);
+
+    let hbox: gtk::Box = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+    hbox.set_homogeneous(false);
+    hbox.append(&mfbutton);
+    hbox.append(&timer_label);
+
     let vbox: gtk::Box = gtk::Box::new(gtk::Orientation::Vertical, 4);
     vbox.set_homogeneous(false);
     vbox.append(&HeaderBar::builder()
         .title_widget(&adw::WindowTitle::new("Hoplite Challenge", ""))
         .build(),
     );
+    vbox.append(&hbox);
     vbox.append(&starting_form_scrolled_window);
     vbox.append(&change_label);
     vbox.append(&changed_form_scrolled_window);
@@ -83,11 +101,11 @@ fn build_ui(app: &Application) {
         ch.set_reps_per_verb(4);
         ch.change_verb_incorrect = true;
     }
-    let starting_form_tv = starting_form_tv_orig.clone();
+    
     let changed_form_tv = changed_form_tv_orig.clone();
     button.connect_clicked(move |button| {
         if let Ok(mut ch) = chooser.lock() {
-            if ch.history.len() == 0 {
+            if ch.history.is_empty() {
                 _ = ch.next_form(None);
             }
 
@@ -130,7 +148,7 @@ fn build_ui(app: &Application) {
                 change_label.set_markup(changed_vf.get_description(starting_vf, "<span foreground=\"red\"><b>", "</b></span>").as_str());
 
                 correct_label.set_markup("");
-                starting_form_tv.buffer().set_text(&starting_form.replace(" /", ","));
+                starting_form_tv_orig.buffer().set_text(&starting_form.replace(" /", ",")); //no need to clone
                 changed_form_tv.buffer().set_text("");
                 changed_form_tv.set_editable(true);
                 changed_form_tv.set_cursor_visible(true);
@@ -213,7 +231,7 @@ fn build_ui(app: &Application) {
             _ => ""
         };
 
-        if translated_key.len() > 0 {
+        if !translated_key.is_empty() {
             tv.emit_insert_at_cursor(translated_key);
             return Inhibit(true);
         }
