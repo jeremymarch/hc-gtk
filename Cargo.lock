@@ -77,11 +77,11 @@ dependencies = [
 
 [[package]]
 name = "form_selector"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "hoplite_verbs_rs",
+ "polytonic-greek",
  "rand",
- "rustunicodetests",
 ]
 
 [[package]]
@@ -411,7 +411,7 @@ dependencies = [
  "gtk4",
  "hoplite_verbs_rs",
  "libadwaita",
- "rustunicodetests",
+ "polytonic-greek",
 ]
 
 [[package]]
@@ -422,11 +422,12 @@ checksum = "2540771e65fc8cb83cd6e8a237f70c319bd5c29f78ed1084ba5d50eeac86f7f9"
 
 [[package]]
 name = "hoplite_verbs_rs"
-version = "0.2.0"
+version = "0.3.2"
+source = "git+https://github.com/jeremymarch/hoplite_verbs_rs#264b2d4fd7d87f3672dec1e658800f34b3f0c31c"
 dependencies = [
  "itertools",
+ "polytonic-greek",
  "rand",
- "rustunicodetests",
  "unicode-normalization",
  "unicode-segmentation",
 ]
@@ -553,6 +554,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
 
 [[package]]
+name = "polytonic-greek"
+version = "0.3.2"
+source = "git+https://github.com/jeremymarch/polytonic-greek#35f9bf4f293c58cfff988d3086688ab6b88628fa"
+dependencies = [
+ "unicode-normalization",
+]
+
+[[package]]
 name = "ppv-lite86"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -657,13 +666,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f0dfe2087c51c460008730de8b57e6a320782fbfb312e1f4d520e6c6fae155ee"
 dependencies = [
  "semver",
-]
-
-[[package]]
-name = "rustunicodetests"
-version = "0.1.0"
-dependencies = [
- "unicode-normalization",
 ]
 
 [[package]]
