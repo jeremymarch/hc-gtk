@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-gtk = { version = "0.5.2", package = "gtk4", features = ["v4_8"]}
-adw = { version = "0.2.1", package = "libadwaita" }
+gtk = { version = "0.7.3", package = "gtk4", features = ["v4_12"]}
+adw = { version = "0.5.3", package = "libadwaita" }
 
 #form_selector = { path = "../form_selector" }
 #hoplite_verbs_rs = { path = "../hoplite_verbs_rs" }
