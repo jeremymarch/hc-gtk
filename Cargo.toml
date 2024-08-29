@@ -7,9 +7,15 @@ edition = "2021"
 gtk = { version = "0.9.0", package = "gtk4", features = ["v4_14"] }
 adw = { version = "0.7.0", package = "libadwaita" }
 
-#form_selector = { path = "../form_selector" }
+form_selector = { path = "../form_selector" }
 #hoplite_verbs_rs = { path = "../hoplite_verbs_rs" }
-form_selector = { git = "https://github.com/jeremymarch/form_selector", version = "0.3.1" }
-hoplite_verbs_rs = { git = "https://github.com/jeremymarch/hoplite_verbs_rs", version = "0.3.7" }
+#form_selector = { git = "https://github.com/jeremymarch/form_selector", version = "0.3.1" }
+hoplite_verbs_rs = { git = "https://github.com/jeremymarch/hoplite_verbs_rs", version = "0.5.0" }
 #hoplite_verb_chooser = { path = "../../hoplite_verb_chooser" }
-#libhc = { path = "../hc-actixweb/libhc", features = ["sqlite"] }
+libhc = { path = "../hc-actixweb/libhc", features = ["sqlite"] }
+sqlx = { version = "0.8.0", features = [
+    "sqlite",
+    "runtime-tokio-rustls",
+    "uuid",
+    "chrono",
+] }

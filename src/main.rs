@@ -9,9 +9,12 @@ use gtk::EventControllerKey;
 
 use form_selector::*;
 use hoplite_verbs_rs::*;
-use polytonic_greek::*;
+use libhc::*;
 
 use std::sync::{Arc, Mutex};
+
+use sqlx::sqlite::SqliteConnectOptions;
+use std::str::FromStr; //for sqlx::sqlite
 
 const APP_ID: &str = "com.philolog.hc-gtk";
 
@@ -95,6 +98,60 @@ fn build_ui(app: &Application) {
     vbox.append(&correct_label);
     vbox.append(&button);
 
+    let db_path = ":memory:";
+    let options = SqliteConnectOptions::from_str(db_path)
+        .expect("Could not connect to db.")
+        .foreign_keys(true)
+        .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
+        .read_only(false)
+        .collation("PolytonicGreek", |l, r| {
+            l.to_lowercase().cmp(&r.to_lowercase())
+        });
+    let hc = libhc::HcBlockingClient::connect(options).unwrap();
+    hc.create_db().unwrap();
+    let verbs = libhc::hc_load_verbs("pp.txt");
+    let csq = CreateSessionQuery {
+        qtype: String::from("abc"),
+        name: None,
+        verbs: Some(String::from("20")),
+        units: None,
+        params: None,
+        highest_unit: None,
+        opponent: String::from(""),
+        countdown: true,
+        practice_reps_per_verb: Some(4),
+        max_changes: 4,
+        max_time: 30,
+    };
+    let user_id = hc
+        .create_user("jwm", "12341234", "email@email.com")
+        .unwrap();
+    let session_uuid = hc.insert_session(user_id, &verbs, csq).unwrap();
+
+    let answerq = AnswerQuery {
+        qtype: String::from("abc"),
+        answer: String::from("παιδεύω"),
+        time: String::from("25:01"),
+        mf_pressed: false,
+        timed_out: false,
+        session_id: *session_uuid.as_ref(),
+    };
+
+    let move1 = hc
+        .get_move(user_id, *session_uuid.as_ref(), &verbs)
+        .unwrap();
+    println!("{:?}", move1);
+    let answer = hc.answer(user_id, &answerq, &verbs).unwrap();
+    println!("{:?}", answer);
+    let move2 = hc
+        .get_move(user_id, *session_uuid.as_ref(), &verbs)
+        .unwrap();
+    println!("{:?}", move2);
+    let answer2 = hc.answer(user_id, &answerq, &verbs).unwrap();
+    println!("{:?}", answer2);
+
+    let hc_global = Arc::new(Mutex::new(hc));
+
     let chooser = Arc::new(Mutex::new(init_random_form_chooser(
         "../hoplite_verbs_rs/testdata/pp.txt",
         20,
@@ -106,6 +163,15 @@ fn build_ui(app: &Application) {
 
     let changed_form_tv = changed_form_tv_orig.clone();
     button.connect_clicked(move |button| {
+        if let Ok(hc2) = hc_global.lock() {
+            let a = hc2.answer(user_id, &answerq, &verbs).unwrap();
+            println!("{:?}", a);
+
+            let move1 = hc2
+                .get_move(user_id, *session_uuid.as_ref(), &verbs)
+                .unwrap();
+        }
+
         if let Ok(mut ch) = chooser.lock() {
             if ch.history.is_empty() {
                 _ = ch.next_form(None);
