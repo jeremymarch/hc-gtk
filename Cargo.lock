@@ -401,14 +401,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "form_selector"
-version = "0.3.1"
-dependencies = [
- "hoplite_verb_chooser",
- "rand",
-]
-
-[[package]]
 name = "form_urlencoded"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -799,9 +791,7 @@ dependencies = [
 name = "hc-gtk"
 version = "0.1.0"
 dependencies = [
- "form_selector",
  "gtk4",
- "hoplite_verbs_rs",
  "libadwaita",
  "libhc",
  "sqlx",

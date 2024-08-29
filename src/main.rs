@@ -7,8 +7,7 @@ use gtk::Button;
 use gtk::CssProvider;
 use gtk::EventControllerKey;
 
-use form_selector::*;
-use hoplite_verbs_rs::*;
+//use hoplite_verbs_rs::*;
 use libhc::*;
 
 use std::sync::{Arc, Mutex};
@@ -113,14 +112,14 @@ fn build_ui(app: &Application) {
     let csq = CreateSessionQuery {
         qtype: String::from("abc"),
         name: None,
-        verbs: Some(String::from("20")),
-        units: None,
+        verbs: None, //Some(String::from("20")),
+        units: Some(String::from("2")),
         params: None,
         highest_unit: None,
         opponent: String::from(""),
         countdown: true,
         practice_reps_per_verb: Some(4),
-        max_changes: 4,
+        max_changes: 2,
         max_time: 30,
     };
     let user_id = hc
@@ -136,46 +135,24 @@ fn build_ui(app: &Application) {
         timed_out: false,
         session_id: *session_uuid.as_ref(),
     };
-
-    let move1 = hc
-        .get_move(user_id, *session_uuid.as_ref(), &verbs)
-        .unwrap();
-    println!("{:?}", move1);
-    let answer = hc.answer(user_id, &answerq, &verbs).unwrap();
-    println!("{:?}", answer);
-    let move2 = hc
-        .get_move(user_id, *session_uuid.as_ref(), &verbs)
-        .unwrap();
-    println!("{:?}", move2);
-    let answer2 = hc.answer(user_id, &answerq, &verbs).unwrap();
-    println!("{:?}", answer2);
+    let _answer = hc.answer(user_id, &answerq, &verbs).unwrap();
 
     let hc_global = Arc::new(Mutex::new(hc));
-
-    let chooser = Arc::new(Mutex::new(init_random_form_chooser(
-        "../hoplite_verbs_rs/testdata/pp.txt",
-        20,
-    )));
-    if let Ok(mut ch) = chooser.lock() {
-        ch.set_reps_per_verb(4);
-        ch.change_verb_incorrect = true;
-    }
 
     let changed_form_tv = changed_form_tv_orig.clone();
     button.connect_clicked(move |button| {
         if let Ok(hc2) = hc_global.lock() {
-            let a = hc2.answer(user_id, &answerq, &verbs).unwrap();
-            println!("{:?}", a);
+            // let a = hc2.answer(user_id, &answerq, &verbs).unwrap();
+            // println!("{:?}", a);
 
-            let move1 = hc2
-                .get_move(user_id, *session_uuid.as_ref(), &verbs)
-                .unwrap();
-        }
+            // let move1 = hc2
+            //     .get_move(user_id, *session_uuid.as_ref(), &verbs)
+            //     .unwrap();
 
-        if let Ok(mut ch) = chooser.lock() {
-            if ch.history.is_empty() {
-                _ = ch.next_form(None);
-            }
+            // if let Ok(mut ch) = chooser.lock() {
+            //     if ch.history.is_empty() {
+            //         _ = ch.next_form(None);
+            //     }
 
             if button.label().unwrap() == "Submit" {
                 changed_form_tv.set_editable(false);
@@ -185,17 +162,26 @@ fn build_ui(app: &Application) {
                     &changed_form_tv.buffer().end_iter(),
                     false,
                 );
-                let prev_vf = &ch.history[ch.history.len() - 1]; //call here before calling next_form()
-                let answer_correct = prev_vf
-                    .get_form(false)
-                    .unwrap()
-                    .last()
-                    .unwrap()
-                    .form
-                    .to_string();
+                // let prev_vf = &ch.history[ch.history.len() - 1]; //call here before calling next_form()
+                // let answer_correct = prev_vf
+                //     .get_form(false)
+                //     .unwrap()
+                //     .last()
+                //     .unwrap()
+                //     .form
+                //     .to_string();
 
-                if let Ok(vf) = ch.next_form(Some(&answer)) {
-                    let is_correct_option = vf.1;
+                //if let Ok(vf) = ch.next_form(Some(&answer)) {
+                let answerq = AnswerQuery {
+                    qtype: String::from("abc"),
+                    answer: answer.to_string(),
+                    time: String::from("25:01"),
+                    mf_pressed: false,
+                    timed_out: false,
+                    session_id: *session_uuid.as_ref(),
+                };
+                if let Ok(vf) = hc2.answer(user_id, &answerq, &verbs) {
+                    let is_correct_option = vf.is_correct;
                     if let Some(is_correct) = is_correct_option {
                         if is_correct {
                             println!("correct");
@@ -205,7 +191,7 @@ fn build_ui(app: &Application) {
                             correct_label.set_markup(
                                 format!(
                                     "<span foreground=\"red\">incorrect: {}</span>",
-                                    answer_correct.replace(" /", ",")
+                                    vf.correct_answer.unwrap().replace(" /", ",")
                                 )
                                 .as_str(),
                             );
@@ -220,9 +206,24 @@ fn build_ui(app: &Application) {
             } else {
                 button.set_label("Submit");
 
-                println!("counter: {}, reps: {}", ch.verb_counter, ch.reps_per_verb);
+                //println!("counter: {}, reps: {}", ch.verb_counter, ch.reps_per_verb);
 
-                let starting_vf = &ch.history[ch.history.len() - 2];
+                let move1 = hc2
+                    .get_move(user_id, *session_uuid.as_ref(), &verbs)
+                    .unwrap();
+
+                let starting_vf = HcGreekVerbForm {
+                    verb: verbs[move1.verb_prev.unwrap() as usize].clone(),
+                    person: Some(HcPerson::from_i16(move1.person_prev.unwrap())),
+                    number: Some(HcNumber::from_i16(move1.number_prev.unwrap())),
+                    tense: HcTense::from_i16(move1.tense_prev.unwrap()),
+                    voice: HcVoice::from_i16(move1.voice_prev.unwrap()),
+                    mood: HcMood::from_i16(move1.mood_prev.unwrap()),
+                    gender: None,
+                    case: None,
+                };
+
+                //let starting_vf = &ch.history[ch.history.len() - 2];
                 let starting_form = starting_vf
                     .get_form(false)
                     .unwrap()
@@ -231,11 +232,25 @@ fn build_ui(app: &Application) {
                     .form
                     .to_string();
 
-                let changed_vf = &ch.history[ch.history.len() - 1];
+                //let changed_vf = &ch.history[ch.history.len() - 1];
+                let changed_vf = HcGreekVerbForm {
+                    verb: verbs[move1.verb.unwrap() as usize].clone(),
+                    person: Some(HcPerson::from_i16(move1.person.unwrap())),
+                    number: Some(HcNumber::from_i16(move1.number.unwrap())),
+                    tense: HcTense::from_i16(move1.tense.unwrap()),
+                    voice: HcVoice::from_i16(move1.voice.unwrap()),
+                    mood: HcMood::from_i16(move1.mood.unwrap()),
+                    gender: None,
+                    case: None,
+                };
 
                 change_label.set_markup(
                     changed_vf
-                        .get_description(starting_vf, "<span foreground=\"red\"><b>", "</b></span>")
+                        .get_description(
+                            &starting_vf,
+                            "<span foreground=\"red\"><b>",
+                            "</b></span>",
+                        )
                         .as_str(),
                 );
 
@@ -249,6 +264,7 @@ fn build_ui(app: &Application) {
                 changed_form_tv.grab_focus();
             }
         }
+        //}
     });
 
     let window = ApplicationWindow::builder()
