@@ -6,8 +6,9 @@ use gtk::Application;
 use gtk::Button;
 use gtk::CssProvider;
 use gtk::EventControllerKey;
+use secrecy::Secret;
 
-//use hoplite_verbs_rs::*;
+use libhc::hcblockingclient::HcBlockingClient;
 use libhc::*;
 
 use std::sync::{Arc, Mutex};
@@ -97,7 +98,7 @@ fn build_ui(app: &Application) {
     vbox.append(&correct_label);
     vbox.append(&button);
 
-    let db_path = ":memory:";
+    let db_path = "hc-gtk.sqlite"; //":memory:";
     let options = SqliteConnectOptions::from_str(db_path)
         .expect("Could not connect to db.")
         .foreign_keys(true)
@@ -106,7 +107,7 @@ fn build_ui(app: &Application) {
         .collation("PolytonicGreek", |l, r| {
             l.to_lowercase().cmp(&r.to_lowercase())
         });
-    let hc = libhc::HcBlockingClient::connect(options).unwrap();
+    let hc = HcBlockingClient::connect(options).unwrap();
     hc.create_db().unwrap();
     let verbs = libhc::hc_load_verbs("pp.txt");
     let csq = CreateSessionQuery {
@@ -122,38 +123,27 @@ fn build_ui(app: &Application) {
         max_changes: 2,
         max_time: 30,
     };
-    let user_id = hc
-        .create_user("jwm", "12341234", "email@email.com")
-        .unwrap();
-    let session_uuid = hc.insert_session(user_id, &verbs, csq).unwrap();
 
-    let answerq = AnswerQuery {
-        qtype: String::from("abc"),
-        answer: String::from("παιδεύω"),
-        time: String::from("25:01"),
-        mf_pressed: false,
-        timed_out: false,
-        session_id: *session_uuid.as_ref(),
+    let credentials = Credentials {
+        username: String::from("jwm"),
+        password: Secret::new("12341234".to_string()),
     };
-    let _answer = hc.answer(user_id, &answerq, &verbs).unwrap();
+
+    let user_id = match hc.validate_credentials(credentials) {
+        Ok(i) => i,
+        _ => match hc.create_user("jwm", "12341234", "email@email.com") {
+            Ok(i) => i,
+            _ => panic!(),
+        },
+    };
+
+    let session_uuid = hc.insert_session(user_id, &verbs, &csq).unwrap();
 
     let hc_global = Arc::new(Mutex::new(hc));
 
     let changed_form_tv = changed_form_tv_orig.clone();
     button.connect_clicked(move |button| {
         if let Ok(hc2) = hc_global.lock() {
-            // let a = hc2.answer(user_id, &answerq, &verbs).unwrap();
-            // println!("{:?}", a);
-
-            // let move1 = hc2
-            //     .get_move(user_id, *session_uuid.as_ref(), &verbs)
-            //     .unwrap();
-
-            // if let Ok(mut ch) = chooser.lock() {
-            //     if ch.history.is_empty() {
-            //         _ = ch.next_form(None);
-            //     }
-
             if button.label().unwrap() == "Submit" {
                 changed_form_tv.set_editable(false);
                 changed_form_tv.set_cursor_visible(false);
@@ -162,18 +152,9 @@ fn build_ui(app: &Application) {
                     &changed_form_tv.buffer().end_iter(),
                     false,
                 );
-                // let prev_vf = &ch.history[ch.history.len() - 1]; //call here before calling next_form()
-                // let answer_correct = prev_vf
-                //     .get_form(false)
-                //     .unwrap()
-                //     .last()
-                //     .unwrap()
-                //     .form
-                //     .to_string();
 
-                //if let Ok(vf) = ch.next_form(Some(&answer)) {
                 let answerq = AnswerQuery {
-                    qtype: String::from("abc"),
+                    qtype: String::from(""),
                     answer: answer.to_string(),
                     time: String::from("25:01"),
                     mf_pressed: false,
@@ -213,17 +194,17 @@ fn build_ui(app: &Application) {
                     .unwrap();
 
                 let starting_vf = HcGreekVerbForm {
-                    verb: verbs[move1.verb_prev.unwrap() as usize].clone(),
-                    person: Some(HcPerson::from_i16(move1.person_prev.unwrap())),
-                    number: Some(HcNumber::from_i16(move1.number_prev.unwrap())),
-                    tense: HcTense::from_i16(move1.tense_prev.unwrap()),
-                    voice: HcVoice::from_i16(move1.voice_prev.unwrap()),
-                    mood: HcMood::from_i16(move1.mood_prev.unwrap()),
+                    verb: verbs[move1.verb_prev.unwrap_or(move1.verb.unwrap_or(0)) as usize]
+                        .clone(),
+                    person: Some(HcPerson::from_i16(move1.person_prev.unwrap_or(0))),
+                    number: Some(HcNumber::from_i16(move1.number_prev.unwrap_or(0))),
+                    tense: HcTense::from_i16(move1.tense_prev.unwrap_or(0)),
+                    voice: HcVoice::from_i16(move1.voice_prev.unwrap_or(0)),
+                    mood: HcMood::from_i16(move1.mood_prev.unwrap_or(0)),
                     gender: None,
                     case: None,
                 };
 
-                //let starting_vf = &ch.history[ch.history.len() - 2];
                 let starting_form = starting_vf
                     .get_form(false)
                     .unwrap()
@@ -232,7 +213,6 @@ fn build_ui(app: &Application) {
                     .form
                     .to_string();
 
-                //let changed_vf = &ch.history[ch.history.len() - 1];
                 let changed_vf = HcGreekVerbForm {
                     verb: verbs[move1.verb.unwrap() as usize].clone(),
                     person: Some(HcPerson::from_i16(move1.person.unwrap())),
@@ -264,7 +244,6 @@ fn build_ui(app: &Application) {
                 changed_form_tv.grab_focus();
             }
         }
-        //}
     });
 
     let window = ApplicationWindow::builder()
@@ -280,6 +259,11 @@ fn build_ui(app: &Application) {
     let evk = EventControllerKey::new();
     let tv = changed_form_tv_orig.clone();
     evk.connect_key_pressed(move |_evck, key, _code, _state| {
+        if key == Key::Return {
+            button.emit_clicked();
+            return false.into();
+        }
+
         let diacritic_option: Option<u32> = match key {
             Key::_1 => Some(HGK_ROUGH),
             Key::_2 => Some(HGK_SMOOTH),
