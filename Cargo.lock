@@ -846,6 +846,7 @@ dependencies = [
 [[package]]
 name = "hoplite_verb_chooser"
 version = "0.1.0"
+source = "git+https://github.com/jeremymarch/hoplite_verb_chooser#3f4b4386b1e4cd34973069910cdc190570007539"
 dependencies = [
  "hoplite_verbs_rs",
  "rand",
@@ -975,6 +976,7 @@ checksum = "d8adc4bb1803a324070e64a98ae98f38934d91957a99cfb3a43dcbc01bc56439"
 [[package]]
 name = "libhc"
 version = "0.1.0"
+source = "git+https://github.com/jeremymarch/hc-actixweb.git#2019d1f1852b96221754caa1a2b72958bec452f7"
 dependencies = [
  "argon2",
  "async-trait",
