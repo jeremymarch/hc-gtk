@@ -193,16 +193,34 @@ fn build_ui(app: &Application) {
                     .get_move(user_id, *session_uuid.as_ref(), &verbs)
                     .unwrap();
 
-                let starting_vf = HcGreekVerbForm {
-                    verb: verbs[move1.verb_prev.unwrap_or(move1.verb.unwrap_or(0)) as usize]
-                        .clone(),
-                    person: Some(HcPerson::from_i16(move1.person_prev.unwrap_or(0))),
-                    number: Some(HcNumber::from_i16(move1.number_prev.unwrap_or(0))),
-                    tense: HcTense::from_i16(move1.tense_prev.unwrap_or(0)),
-                    voice: HcVoice::from_i16(move1.voice_prev.unwrap_or(0)),
-                    mood: HcMood::from_i16(move1.mood_prev.unwrap_or(0)),
-                    gender: None,
-                    case: None,
+                println!("move: {:?}", move1);
+
+                let starting_vf = if move1.verb.is_some()
+                    && move1.verb_prev.is_some()
+                    && move1.verb.unwrap() == move1.verb_prev.unwrap()
+                {
+                    HcGreekVerbForm {
+                        verb: verbs[move1.verb_prev.unwrap_or(move1.verb.unwrap_or(0)) as usize]
+                            .clone(),
+                        person: Some(HcPerson::from_i16(move1.person_prev.unwrap_or(0))),
+                        number: Some(HcNumber::from_i16(move1.number_prev.unwrap_or(0))),
+                        tense: HcTense::from_i16(move1.tense_prev.unwrap_or(0)),
+                        voice: HcVoice::from_i16(move1.voice_prev.unwrap_or(0)),
+                        mood: HcMood::from_i16(move1.mood_prev.unwrap_or(0)),
+                        gender: None,
+                        case: None,
+                    }
+                } else {
+                    HcGreekVerbForm {
+                        verb: verbs[move1.verb.unwrap_or(0) as usize].clone(),
+                        person: Some(HcPerson::from_i16(0)),
+                        number: Some(HcNumber::from_i16(0)),
+                        tense: HcTense::from_i16(0),
+                        voice: HcVoice::from_i16(0),
+                        mood: HcMood::from_i16(0),
+                        gender: None,
+                        case: None,
+                    }
                 };
 
                 let starting_form = starting_vf
